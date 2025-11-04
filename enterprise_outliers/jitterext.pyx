@@ -1,13 +1,18 @@
 import numpy as np
 cimport numpy as np
+cnp.import_array()
+
 from libc.math cimport log, sqrt
+import cython
 
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_block_shermor_0D( \
-        np.ndarray[np.double_t,ndim=1] r, \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] r, \
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -22,8 +27,8 @@ def cython_block_shermor_0D( \
     """
     cdef unsigned int cc, ii, cols = len(Jvec)
     cdef double Jldet=0.0, ji, beta, nir, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(len(r), 'd')
-    cdef np.ndarray[np.double_t,ndim=1] Nx = r / Nvec
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(len(r), 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Nx = r / Nvec
 
     ni = 1.0 / Nvec
 
@@ -38,17 +43,17 @@ def cython_block_shermor_0D( \
                 nir += r[ii]*ni[ii]
 
             beta = 1.0 / (nisum + ji)
-            
+
             for ii in range(Uinds[cc,0],Uinds[cc,1]):
                 Nx[ii] -= beta * nir * ni[ii]
 
     return Nx
 
 def cython_block_shermor_0D_ld( \
-        np.ndarray[np.double_t,ndim=1] r, \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] r, \
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -63,8 +68,8 @@ def cython_block_shermor_0D_ld( \
     """
     cdef unsigned int cc, ii, rows = len(r), cols = len(Jvec)
     cdef double Jldet=0.0, ji, beta, nir, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(len(r), 'd')
-    cdef np.ndarray[np.double_t,ndim=1] Nx = r / Nvec
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(len(r), 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Nx = r / Nvec
 
     ni = 1.0 / Nvec
 
@@ -83,12 +88,11 @@ def cython_block_shermor_0D_ld( \
 
             beta = 1.0 / (nisum + ji)
             Jldet += log(Jvec[cc]) - log(beta)
-            
+
             for ii in range(Uinds[cc,0],Uinds[cc,1]):
                 Nx[ii] -= beta * nir * ni[ii]
 
     return Jldet, Nx
-
 
 def python_block_shermor_1D(r, Nvec, Jvec, Uinds):
     """
@@ -118,11 +122,13 @@ def python_block_shermor_1D(r, Nvec, Jvec, Uinds):
 
     return Jldet, xNx
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_block_shermor_1D( \
-        np.ndarray[np.double_t,ndim=1] r, \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] r, \
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -137,7 +143,7 @@ def cython_block_shermor_1D( \
     """
     cdef unsigned int cc, ii, rows = len(r), cols = len(Jvec)
     cdef double Jldet=0.0, ji, beta, xNx=0.0, nir, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
 
     ni = 1.0 / Nvec
 
@@ -158,7 +164,7 @@ def cython_block_shermor_1D( \
             beta = 1.0 / (nisum + ji)
             Jldet += log(Jvec[cc]) - log(beta)
             xNx -= beta * nir * nir
-    
+
     return Jldet, xNx
 
 
@@ -196,11 +202,13 @@ def python_block_shermor_2D(Z, Nvec, Jvec, Uinds):
 
     return Jldet, zNz
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_block_shermor_2D( \
-        np.ndarray[np.double_t,ndim=2] Z, \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=2] Z, \
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -218,8 +226,8 @@ def cython_block_shermor_2D( \
     """
     cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
     cdef double Jldet=0.0, ji, beta, nir, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(len(Nvec), 'd')
-    cdef np.ndarray[np.double_t,ndim=2] zNz
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(len(Nvec), 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=2] zNz
 
     ni = 1.0 / Nvec
     zNz = np.dot(Z.T*ni, Z)
@@ -244,38 +252,94 @@ def cython_block_shermor_2D( \
     return Jldet, zNz
 
 # Proposals for calculating the Z.T * N^-1 * Z2 combinations
-def python_block_shermor_2D_asymm(Z, Z2, Nvec, Jvec, Uinds):
+def python_block_shermor_2D_asymm(Z1, Z2, Nvec, Jvec, Uinds):
     """
     Sherman-Morrison block-inversion for Jitter, ZNiZ
 
-    @param Z:       The design matrix, array (n x m)
-    @param Z2:      The second design matrix, array (n x m2)
-    @param Nvec:    The white noise amplitude, array (n)
-    @param Jvec:    The jitter amplitude, array (k)
-    @param Uinds:   The start/finish indices for the jitter blocks (k x 2)
+    :param Z:       The design matrix, array (n x m)
+    :param Z2:      The second design matrix, array (n x m2)
+    :param Nvec:    The white noise amplitude, array (n)
+    :param Jvec:    The jitter amplitude, array (k)
+    :param Uinds:   The start/finish indices for the jitter blocks (k x 2)
 
     For this version, the residuals need to be sorted properly so that all the
     blocks are continuous in memory. Here, there are n residuals, and k jitter
     parameters.
-    
+
     N = D + U*J*U.T
     calculate: log(det(N)), Z.T * N^-1 * Z
     """
     ni = 1.0 / Nvec
     Jldet = np.einsum('i->', np.log(Nvec))
-    zNz = np.dot(Z.T*ni, Z2)
+    zNz = np.dot(Z1.T*ni, Z2)
 
     for cc, jv in enumerate(Jvec):
         if jv > 0.0:
-            Zblock = Z[Uinds[cc,0]:Uinds[cc,1], :]
+            Zblock1 = Z1[Uinds[cc,0]:Uinds[cc,1], :]
             Zblock2 = Z2[Uinds[cc,0]:Uinds[cc,1], :]
             niblock = ni[Uinds[cc,0]:Uinds[cc,1]]
 
             beta = 1.0 / (np.einsum('i->', niblock)+1.0/jv)
-            zn = np.dot(niblock, Zblock)
+            zn1 = np.dot(niblock, Zblock1)
             zn2 = np.dot(niblock, Zblock2)
-            zNz -= beta * np.outer(zn.T, zn2)
+            zNz -= beta * np.outer(zn1.T, zn2)
             Jldet += np.log(jv) - np.log(beta)
+
+    return Jldet, zNz
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def cython_block_shermor_2D_asymm(
+        cnp.ndarray[cnp.double_t,ndim=2] Z1,
+        cnp.ndarray[cnp.double_t,ndim=2] Z2,
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec,
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec,
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
+    """
+    Sherman-Morrison block-inversion for Jitter, ZNiZ
+
+    :param Z:       The design matrix, array (n x m)
+    :param Z2:      The second design matrix, array (n x m2)
+    :param Nvec:    The white noise amplitude, array (n)
+    :param Jvec:    The jitter amplitude, array (k)
+    :param Uinds:   The start/finish indices for the jitter blocks (k x 2)
+
+    For this version, the residuals need to be sorted properly so that all the
+    blocks are continuous in memory. Here, there are n residuals, and k jitter
+    parameters.
+
+    N = D + U*J*U.T
+    calculate: log(det(N)), Z.T * N^-1 * Z
+    """
+    cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
+    cdef double Jldet=0.0, ji, beta, nir, nisum
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(len(Nvec), 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=2] zNz
+
+    print("WARNING: cython_block_shermor_2D_asymm is deprecated.")
+    print("         use cython_blas_block_shermor_2D_asymm")
+
+    ni = 1.0 / Nvec
+    for cc in range(rows):
+        Jldet += log(Nvec[cc])
+    zNz = np.dot(Z1.T*ni, Z2)
+
+    for cc in range(cols):
+        if Jvec[cc] > 0.0:
+            Zblock1 = Z1[Uinds[cc,0]:Uinds[cc,1], :]
+            Zblock2 = Z2[Uinds[cc,0]:Uinds[cc,1], :]
+            niblock = ni[Uinds[cc,0]:Uinds[cc,1]]
+
+            nisum = 0.0
+            for ii in range(len(niblock)):
+                nisum += niblock[ii]
+
+            beta = 1.0 / (nisum+1.0/Jvec[cc])
+            zn1 = np.dot(niblock, Zblock1)
+            zn2 = np.dot(niblock, Zblock2)
+
+            zNz -= beta * np.outer(zn1.T, zn2)
+            Jldet += log(Jvec[cc]) - log(beta)
 
     return Jldet, zNz
 
@@ -308,11 +372,13 @@ def python_draw_ecor(r, Nvec, Jvec, Uinds):
 
     return rv
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_draw_ecor( \
-        np.ndarray[np.double_t,ndim=1] r, \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] r, \
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Given Jvec, draw new epoch-averaged residuals
 
@@ -330,8 +396,8 @@ def cython_draw_ecor( \
     """
     cdef unsigned int cc, ii, rows = len(r), cols = len(Jvec)
     cdef double ji, nir, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
-    cdef np.ndarray[np.double_t,ndim=1] rv = np.random.randn(cols)
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] rv = np.random.randn(cols)
 
     for cc in range(cols):
         rv[cc] *= sqrt(Jvec[cc])
@@ -351,12 +417,13 @@ def cython_draw_ecor( \
 
     return rv
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_shermor_draw_ecor( \
-        np.ndarray[np.double_t,ndim=1] r, \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] r, \
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Do both the Sherman-Morrison block-inversion for Jitter,
     and the draw of the ecor parameters together (Cythonized)
@@ -375,8 +442,8 @@ def cython_shermor_draw_ecor( \
     """
     cdef unsigned int cc, ii, rows = len(r), cols = len(Jvec)
     cdef double Jldet=0.0, ji, beta, xNx=0.0, nir, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
-    cdef np.ndarray[np.double_t,ndim=1] rv = np.random.randn(cols)
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] rv = np.random.randn(cols)
 
     ni = 1.0 / Nvec
 
@@ -405,12 +472,13 @@ def cython_shermor_draw_ecor( \
 
     return Jldet, xNx, rv
 
-
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_update_ea_residuals( \
-        np.ndarray[np.double_t,ndim=1] gibbsresiduals, \
-        np.ndarray[np.double_t,ndim=1] gibbssubresiduals, \
-        np.ndarray[np.double_t,ndim=1] eat, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] gibbsresiduals, \
+        cnp.ndarray[cnp.double_t,ndim=1] gibbssubresiduals, \
+        cnp.ndarray[cnp.double_t,ndim=1] eat, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Given epoch-averaged residuals, update the residuals, and the subtracted
     residuals, so that these can be further processed by the other conditional
@@ -433,8 +501,10 @@ def cython_update_ea_residuals( \
     return gibbsresiduals, gibbssubresiduals
 
 
-def cython_Uj(np.ndarray[np.double_t,ndim=1] j, \
-        np.ndarray[np.int_t,ndim=2] Uinds, nobs):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def cython_Uj(cnp.ndarray[cnp.double_t,ndim=1] j, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds, nobs):
     """
     Given epoch-averaged residuals (j), get the residuals.
     Used in 'updateDetSources'
@@ -446,7 +516,7 @@ def cython_Uj(np.ndarray[np.double_t,ndim=1] j, \
 
     """
     cdef unsigned int k = Uinds.shape[0], ii, cc
-    cdef np.ndarray[np.double_t,ndim=1] Uj = np.zeros(nobs, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Uj = np.zeros(nobs, 'd')
 
     for cc in range(k):
         for ii in range(Uinds[cc,0],Uinds[cc,1]):
@@ -454,8 +524,10 @@ def cython_Uj(np.ndarray[np.double_t,ndim=1] j, \
 
     return Uj
 
-def cython_UTx(np.ndarray[np.double_t,ndim=1] x, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+@cython.boundscheck(False)
+@cython.wraparound(False)
+def cython_UTx(cnp.ndarray[cnp.double_t,ndim=1] x, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Given residuals (x), get np.dot(U.T, x)
     Used in 'updateDetSources'
@@ -466,7 +538,7 @@ def cython_UTx(np.ndarray[np.double_t,ndim=1] x, \
 
     """
     cdef unsigned int k = Uinds.shape[0], ii, cc
-    cdef np.ndarray[np.double_t,ndim=1] UTx = np.zeros(k, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] UTx = np.zeros(k, 'd')
 
     for cc in range(k):
         for ii in range(Uinds[cc,0],Uinds[cc,1]):
@@ -474,11 +546,13 @@ def cython_UTx(np.ndarray[np.double_t,ndim=1] x, \
 
     return UTx
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_logdet_dN( \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.double_t,ndim=1] dNvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] dNvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -497,8 +571,8 @@ def cython_logdet_dN( \
     """
     cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
     cdef double tr=0.0, ji, nisum, Nnisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
-    cdef np.ndarray[np.double_t,ndim=1] Nni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Nni = np.empty(rows, 'd')
 
     ni = 1.0 / Nvec
     Nni = dNvec / Nvec**2
@@ -517,14 +591,16 @@ def cython_logdet_dN( \
                 Nnisum += Nni[ii]
 
             tr -= Nnisum / (nisum + ji)
-    
+
     return tr
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_logdet_dJ( \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.double_t,ndim=1] dJvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] dJvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -544,7 +620,7 @@ def cython_logdet_dJ( \
     """
     cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
     cdef double dJldet=0.0, ji, beta, nisum
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
 
     ni = 1.0 / Nvec
 
@@ -559,15 +635,17 @@ def cython_logdet_dJ( \
             beta = 1.0 / (nisum + ji)
 
             dJldet += dJvec[cc]*(nisum - beta*nisum**2)
-    
+
     return dJldet
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_logdet_dN_dN( \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.double_t,ndim=1] dNvec1, \
-        np.ndarray[np.double_t,ndim=1] dNvec2, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] dNvec1, \
+        cnp.ndarray[cnp.double_t,ndim=1] dNvec2, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -587,9 +665,9 @@ def cython_logdet_dN_dN( \
     """
     cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
     cdef double tr=0.0, ji, nisum, Nnisum1, Nnisum2, NniNnisum, beta
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
-    cdef np.ndarray[np.double_t,ndim=1] Nni1 = np.empty(rows, 'd')
-    cdef np.ndarray[np.double_t,ndim=1] Nni2 = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Nni1 = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Nni2 = np.empty(rows, 'd')
 
     ni = 1.0 / Nvec
     Nni1 = dNvec1 / Nvec**2
@@ -616,15 +694,17 @@ def cython_logdet_dN_dN( \
 
             tr += Nnisum1 * Nnisum2 * beta**2
             tr -= 2 * NniNnisum * beta
-    
+
     return tr
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_logdet_dN_dJ( \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.double_t,ndim=1] dNvec, \
-        np.ndarray[np.double_t,ndim=1] dJvec, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] dNvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] dJvec, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -646,8 +726,8 @@ def cython_logdet_dN_dJ( \
     """
     cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
     cdef double tr=0.0, ji, nisum, Nnisum, beta
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
-    cdef np.ndarray[np.double_t,ndim=1] Nni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] Nni = np.empty(rows, 'd')
 
     ni = 1.0 / Nvec
     Nni = dNvec / Nvec**2
@@ -667,15 +747,17 @@ def cython_logdet_dN_dJ( \
             tr += Nnisum * dJvec[cc]
             tr -= 2 * nisum * dJvec[cc] * Nnisum * beta
             tr += Nnisum * nisum**2 * dJvec[cc] *beta**2
-    
+
     return tr
 
+@cython.boundscheck(False)
+@cython.wraparound(False)
 def cython_logdet_dJ_dJ( \
-        np.ndarray[np.double_t,ndim=1] Nvec, \
-        np.ndarray[np.double_t,ndim=1] Jvec, \
-        np.ndarray[np.double_t,ndim=1] dJvec1, \
-        np.ndarray[np.double_t,ndim=1] dJvec2, \
-        np.ndarray[np.int_t,ndim=2] Uinds):
+        cnp.ndarray[cnp.double_t,ndim=1] Nvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] Jvec, \
+        cnp.ndarray[cnp.double_t,ndim=1] dJvec1, \
+        cnp.ndarray[cnp.double_t,ndim=1] dJvec2, \
+        cnp.ndarray[cnp.int64_t,ndim=2] Uinds):
     """
     Sherman-Morrison block-inversion for Jitter (Cythonized)
 
@@ -696,7 +778,7 @@ def cython_logdet_dJ_dJ( \
     """
     cdef unsigned int cc, ii, rows = len(Nvec), cols = len(Jvec)
     cdef double tr=0.0, ji, nisum, beta
-    cdef np.ndarray[np.double_t,ndim=1] ni = np.empty(rows, 'd')
+    cdef cnp.ndarray[cnp.double_t,ndim=1] ni = np.empty(rows, 'd')
 
     ni = 1.0 / Nvec
 

@@ -3,11 +3,52 @@
 
 """The setup script."""
 
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 from Cython.Build import cythonize
 import os
 import numpy
 import platform
+
+# Cross-platform OpenMP flags with environment overrides
+
+
+def get_openmp_flags():
+    no_openmp = os.getenv("NO_OPENMP", "0") == "1"
+    runtime = os.getenv("OPENMP_RUNTIME", "").lower().strip()
+    is_darwin = platform.system() == "Darwin"
+
+    compile_args = ["-O2", "-fno-wrapv"]
+    link_args = []
+
+    if no_openmp:
+        return compile_args, link_args
+
+    if is_darwin:
+        # Apple clang needs the preprocessor hint
+        # and typically links against libomp
+        compile_args += ["-Xpreprocessor", "-fopenmp"]
+        if runtime in ("iomp5", "libiomp5"):
+            link_args += ["-liomp5"]
+        elif runtime in ("gomp", "libgomp"):
+            link_args += ["-lgomp"]
+        else:
+            # default for macOS is LLVM's libomp
+            link_args += ["-lomp"]
+    else:
+        # GCC/Clang on Linux: prefer -fopenmp for compile and link
+        compile_args += ["-fopenmp"]
+        if runtime in ("iomp5", "libiomp5"):
+            link_args += ["-liomp5"]
+        elif runtime in ("omp", "libomp"):
+            link_args += ["-lomp"]
+        elif runtime in ("gomp", "libgomp"):
+            link_args += ["-lgomp"]
+        else:
+            # Let the compiler/toolchain select the correct runtime
+            link_args += ["-fopenmp"]
+
+    return compile_args, link_args
+
 
 requirements = [
     "numpy>=1.16.3",
@@ -24,13 +65,8 @@ test_requirements = [
     "pytest",
 ]
 
-if platform.system() == "Darwin":
-    extra_compile_args = ["-O2", "-Xpreprocessor", "-fopenmp", "-fno-wrapv"]
-    extra_link_args = ["-liomp5"] if os.getenv("NO_MKL", 0) == 0 else ["-lomp"]
-else:
-    extra_compile_args = ["-O2", "-fopenmp", "-fno-wrapv"]
-    extra_link_args = ["-liomp5"] if os.getenv("NO_MKL", 0) == 0 else []
-
+# Resolve OpenMP flags based on platform and environment
+extra_compile_args, extra_link_args = get_openmp_flags()
 
 ext_modules = [
     Extension(
@@ -49,8 +85,10 @@ ext_modules = [
 ]
 
 # Extract version
+
+
 def get_version():
-    with open("enterprise_outliers/__init__.py") as f:
+    with open("enterprise_outliers/__init__.py", encoding="utf-8") as f:
         for line in f.readlines():
             if "__version__" in line:
                 return line.split('"')[1]
@@ -70,7 +108,10 @@ setup(
     ],
     keywords="gravitational-wave, black-hole binary, pulsar-timing arrays",
     url="https://github.com/nanograv/enterprise_outliers",
-    author="Stephen R. Taylor, Paul T. Baker, Jeffrey S. Hazboun, Sarah Vigeland",
+    author=(
+        "Stephen R. Taylor, Paul T. Baker, Jeffrey S. Hazboun, "
+        "Sarah Vigeland"
+    ),
     author_email="srtaylor@caltech.edu",
     license="MIT",
     packages=[
